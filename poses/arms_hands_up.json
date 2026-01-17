@@ -1,37 +1,37 @@
 {
-  "pose_name": "arms_touch_shoulders",
-  "raw_name": "touch_shoulders",
+  "pose_name": "arms_hands_up",
+  "raw_name": "hands_up",
   "group": "arms",
   "active_features": [
-    "d_wri_opp_sho_L",
-    "d_wri_opp_sho_R",
-    "r_opp_same_sho_L",
-    "r_opp_same_sho_R"
+    "h_wri_vs_sho_L",
+    "h_wri_vs_sho_R",
+    "ang_elb_L",
+    "ang_elb_R"
   ],
   "constraints": {
-    "r_opp_same_sho_L": {
-      "max": 1.05
+    "h_wri_vs_sho_L": {
+      "max": -0.45
     },
-    "r_opp_same_sho_R": {
-      "max": 1.05
+    "h_wri_vs_sho_R": {
+      "max": -0.45
     }
   },
   "features": {
-    "d_wri_opp_sho_L": {
-      "mean": 1.375939130783081,
-      "tol": 0.12
+    "h_wri_vs_sho_L": {
+      "mean": -2.6691031455993652,
+      "tol": 0.8
     },
-    "d_wri_opp_sho_R": {
-      "mean": 1.3827576637268066,
-      "tol": 0.12
+    "h_wri_vs_sho_R": {
+      "mean": -2.740609884262085,
+      "tol": 0.8
     },
-    "r_opp_same_sho_L": {
-      "mean": 3.115135669708252,
-      "tol": 0.6
+    "ang_elb_L": {
+      "mean": 165.2628173828125,
+      "tol": 16.54418354736328
     },
-    "r_opp_same_sho_R": {
-      "mean": 2.7623236179351807,
-      "tol": 0.6
+    "ang_elb_R": {
+      "mean": 162.98069763183594,
+      "tol": 16.875026678466792
     }
   },
   "meta": {

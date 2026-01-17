@@ -1,37 +1,37 @@
 {
-  "pose_name": "arms_touch_shoulders",
-  "raw_name": "touch_shoulders",
-  "group": "arms",
+  "pose_name": "legs_squat",
+  "raw_name": "squat",
+  "group": "legs",
   "active_features": [
-    "d_wri_opp_sho_L",
-    "d_wri_opp_sho_R",
-    "r_opp_same_sho_L",
-    "r_opp_same_sho_R"
+    "ang_kne_L",
+    "ang_kne_R",
+    "ang_hip_L",
+    "ang_hip_R"
   ],
   "constraints": {
-    "r_opp_same_sho_L": {
-      "max": 1.05
+    "ang_kne_L": {
+      "max": 130.0
     },
-    "r_opp_same_sho_R": {
-      "max": 1.05
+    "ang_kne_R": {
+      "max": 130.0
     }
   },
   "features": {
-    "d_wri_opp_sho_L": {
-      "mean": 1.375939130783081,
-      "tol": 0.12
+    "ang_kne_L": {
+      "mean": 122.43840026855469,
+      "tol": 20.0
     },
-    "d_wri_opp_sho_R": {
-      "mean": 1.3827576637268066,
-      "tol": 0.12
+    "ang_kne_R": {
+      "mean": 115.23699951171875,
+      "tol": 20.0
     },
-    "r_opp_same_sho_L": {
-      "mean": 3.115135669708252,
-      "tol": 0.6
+    "ang_hip_L": {
+      "mean": 127.69255065917969,
+      "tol": 20.0
     },
-    "r_opp_same_sho_R": {
-      "mean": 2.7623236179351807,
-      "tol": 0.6
+    "ang_hip_R": {
+      "mean": 132.20472717285156,
+      "tol": 20.0
     }
   },
   "meta": {
