@@ -23,8 +23,8 @@ import mediapipe as mp
 # --------------------
 os.environ.setdefault("DISPLAY", ":0")
 
-W, H = 854, 480
-FPS = 5
+W, H = 1280, 720
+FPS = 7
 FRAME_TIME = 1.0 / FPS
 WINDOW_NAME = "SIMON SAYS (POSE)"
 
