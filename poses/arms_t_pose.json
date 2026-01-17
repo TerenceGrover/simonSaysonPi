@@ -1,0 +1,96 @@
+{
+  "pose_name": "arms_t_pose",
+  "raw_name": "t_pose",
+  "group": "arms",
+  "active_features": [
+    "ang_elb_L",
+    "ang_elb_R",
+    "h_wri_vs_sho_L",
+    "h_wri_vs_sho_R",
+    "d_wri_same_sho_L",
+    "d_wri_same_sho_R",
+    "d_wri_wri"
+  ],
+  "constraints": {
+    "h_wri_vs_sho_L": {
+      "min": -0.45,
+      "max": 0.45
+    },
+    "h_wri_vs_sho_R": {
+      "min": -0.45,
+      "max": 0.45
+    },
+    "d_wri_same_sho_L": {
+      "min": 1.15
+    },
+    "d_wri_same_sho_R": {
+      "min": 1.15
+    },
+    "d_wri_wri": {
+      "min": 2.2
+    }
+  },
+  "features": {
+    "ang_elb_L": {
+      "mean": 164.39332580566406,
+      "tol": 14.984032998046874
+    },
+    "ang_elb_R": {
+      "mean": 159.3863983154297,
+      "tol": 20.0
+    },
+    "h_wri_vs_sho_L": {
+      "mean": 0.015475273132324219,
+      "tol": 0.8
+    },
+    "h_wri_vs_sho_R": {
+      "mean": -0.16218829154968262,
+      "tol": 0.8
+    },
+    "d_wri_same_sho_L": {
+      "mean": 1.3839181661605835,
+      "tol": 0.12
+    },
+    "d_wri_same_sho_R": {
+      "mean": 1.3979815244674683,
+      "tol": 0.12
+    },
+    "d_wri_wri": {
+      "mean": 3.675248861312866,
+      "tol": 0.22051493167877195
+    }
+  },
+  "meta": {
+    "format": "body_axes_v4",
+    "windows": 15,
+    "window_duration_s": 0.55,
+    "rest_between_windows_s": 1.6,
+    "stillness_max": 0.035,
+    "min_valid_frames_per_window": 5,
+    "vis_thresholds": {
+      "core": 0.55,
+      "wrist": 0.25,
+      "ankle": 0.25,
+      "face": 0.25
+    },
+    "robust": "center=median, sigma=MAD*1.4826, tol=max(|center|*0.06, base_abs, sigma*2.8) clamped",
+    "tol_clamp": {
+      "angle": [
+        5.0,
+        20.0
+      ],
+      "dist": [
+        0.08,
+        0.8
+      ],
+      "height": [
+        0.08,
+        0.8
+      ],
+      "ratio": [
+        0.06,
+        0.6
+      ]
+    }
+  }
+}
