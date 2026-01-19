@@ -614,6 +614,7 @@ def main():
     time_limit = TIME_LIMIT_SEC
     hold_sec   = HOLD_SEC
 
+    time.sleep(2.0)  # let camera settle
     try:
         while True:
             # pick target
