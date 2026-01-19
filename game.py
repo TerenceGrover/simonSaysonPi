@@ -568,10 +568,13 @@ def main():
             t_prompt_end = time.time() + PROMPT_SEC
             detected_groups = {"arms":"UNKNOWN","legs":"UNKNOWN","torso":"UNKNOWN"}
             detected_comp = None
+            jpeg_stream = mjpeg_frames_from_pipe(proc.stdout)
 
             while time.time() < t_prompt_end:
+
+                jpg = next(jpeg_stream, None)
+
                 t0 = time.time()
-                jpg = next(mjpeg_frames_from_pipe(proc.stdout), None)
                 if jpg is None:
                     return
 
@@ -580,7 +583,7 @@ def main():
                 if frame is None:
                     continue
 
-                # frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 res = pose.process(rgb)
 
