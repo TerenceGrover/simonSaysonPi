@@ -58,7 +58,7 @@ SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
 # --------------------
 # POSE VALIDATOR TUNING (your defaults)
 # --------------------
-MAX_ACCEPTABLE_SCORE = {"arms": 4, "legs": 4, "torso": 4}
+MAX_ACCEPTABLE_SCORE = {"arms": 12, "legs": 4, "torso": 4}
 MARGIN_MIN          = {"arms": 0.45, "legs": 0.55, "torso": 0.60}
 
 SMOOTH_WIN  = 1
