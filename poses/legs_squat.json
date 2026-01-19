@@ -1,0 +1,64 @@
+{
+  "pose_name": "legs_squat",
+  "raw_name": "squat",
+  "group": "legs",
+  "active_features": [
+    "ang_kne_L",
+    "ang_kne_R",
+    "ang_hip_L",
+    "ang_hip_R"
+  ],
+  "constraints": {
+    "ang_kne_L": {
+      "max": 130.0
+    },
+    "ang_kne_R": {
+      "max": 130.0
+    }
+  },
+  "features": {
+    "ang_kne_L": {
+      "mean": 122.43840026855469,
+      "tol": 20.0
+    },
+    "ang_kne_R": {
+      "mean": 115.23699951171875,
+      "tol": 20.0
+    },
+    "ang_hip_L": {
+      "mean": 127.69255065917969,
+      "tol": 20.0
+    },
+    "ang_hip_R": {
+      "mean": 132.20472717285156,
+      "tol": 20.0
+    }
+  },
+  "meta": {
+    "windows": 15,
+    "window_duration_s": 0.5,
+    "rest_between_windows_s": 1.8,
+    "vis_threshold": 0.5,
+    "stillness_max": 0.03,
+    "min_valid_frames_per_window": 5,
+    "robust": "center=median, sigma=MAD*1.4826, tol=max(|center|*0.06, base_abs, sigma*2.8) clamped",
+    "tol_clamp": {
+      "angle": [
+        5.0,
+        20.0
+      ],
+      "dist": [
+        0.08,
+        0.8
+      ],
+      "height": [
+        0.08,
+        0.8
+      ],
+      "ratio": [
+        0.06,
+        0.6
+      ]
+    }
+  }
+}
