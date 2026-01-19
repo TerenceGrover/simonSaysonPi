@@ -48,11 +48,11 @@ RPICAM_CMD = [
 # GAME TUNING
 # --------------------
 SIMON_SAYS_PROB = 0.72     # probability the prompt is a real "Simon says"
-PROMPT_SEC      = 1.2      # show prompt before evaluation starts
-TIME_LIMIT_SEC  = 3.0      # time allowed to achieve the pose
-HOLD_SEC        = 0.9      # must hold correct pose this long (stable frames)
+PROMPT_SEC      = 0.2      # show prompt before evaluation starts
+TIME_LIMIT_SEC  = 2.5      # time allowed to achieve the pose
+HOLD_SEC        = 0.5      # must hold correct pose this long (stable frames)
 COOLDOWN_SEC    = 0.5      # pause between rounds
-SPEEDUP_EVERY   = 4        # every N successes, tighten timing
+SPEEDUP_EVERY   = 2       # every N successes, tighten timing
 SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
 
 # --------------------
