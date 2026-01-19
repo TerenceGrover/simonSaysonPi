@@ -603,7 +603,7 @@ def read_frame(jpeg_stream, max_skip=5):
             frame = tmp
     if frame is None:
         return None
-    return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return frame
 
 def play_random_wav_from_folder(folder: Path):
     if not folder.exists() or not folder.is_dir():
