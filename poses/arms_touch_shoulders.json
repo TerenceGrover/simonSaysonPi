@@ -9,12 +9,10 @@
     "r_opp_same_sho_R"
   ],
   "constraints": {
-    "r_opp_same_sho_L": {
-      "max": 1.05
-    },
-    "r_opp_same_sho_R": {
-      "max": 1.05
-    }
+    "r_opp_same_sho_L": { "max": 1.05 },
+    "r_opp_same_sho_R": { "max": 1.05 },
+    "d_wri_opp_sho_L": { "max": 1.65 },
+    "d_wri_opp_sho_R": { "max": 1.65 }
   },
   "features": {
     "d_wri_opp_sho_L": {

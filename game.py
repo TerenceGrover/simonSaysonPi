@@ -63,7 +63,7 @@ SMOOTH_NEED = 6
 
 VIS_CORE  = 0.50
 VIS_WRIST = 0.18
-VIS_ANKLE = 0.18
+VIS_ANKLE = 0.1
 VIS_FACE  = 0.18
 
 # --------------------
@@ -514,16 +514,19 @@ def draw_hud(frame, score, streak, detected_groups, detected_compound, msg_top, 
     cv2.putText(frame, msg_mid, (20, 215), cv2.FONT_HERSHEY_SIMPLEX, 1.1, color, 3)
     cv2.putText(frame, msg_bot, (20, 270), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
 
-def read_frame(jpeg_stream):
-    jpg = next(jpeg_stream, None)
-    if jpg is None:
-        return None
-    arr = np.frombuffer(jpg, dtype=np.uint8)
-    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+def read_frame(jpeg_stream, max_skip=5):
+    frame = None
+    for _ in range(max_skip):
+        jpg = next(jpeg_stream, None)
+        if jpg is None:
+            return None
+        arr = np.frombuffer(jpg, dtype=np.uint8)
+        tmp = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        if tmp is not None:
+            frame = tmp
     if frame is None:
         return None
-    frame = cv2.rotate(frame, ROTATE)  # ALWAYS rotate in one place
-    return frame
+    return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 # ============================================================
 # MAIN
