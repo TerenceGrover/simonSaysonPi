@@ -559,6 +559,7 @@ def main():
         stderr=subprocess.DEVNULL,
         bufsize=0
     )
+    jpeg_stream = mjpeg_frames_from_pipe(proc.stdout)
 
     score = 0
     streak = 0
@@ -568,7 +569,6 @@ def main():
     hold_sec   = HOLD_SEC
 
     try:
-        jpeg_stream = mjpeg_frames_from_pipe(proc.stdout)
         while True:
             # pick target
             target_kind, target_name = random.choice(pool)
