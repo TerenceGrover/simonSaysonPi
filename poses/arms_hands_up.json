@@ -10,37 +10,43 @@
   ],
   "constraints": {
     "h_wri_vs_sho_L": {
-      "max": -0.45
+      "min": 0.45
     },
     "h_wri_vs_sho_R": {
-      "max": -0.45
+      "min": 0.45
     }
   },
   "features": {
     "h_wri_vs_sho_L": {
-      "mean": -2.6691031455993652,
-      "tol": 0.8
+      "mean": 2.194490671157837,
+      "tol": 0.4693506348609924
     },
     "h_wri_vs_sho_R": {
-      "mean": -2.740609884262085,
-      "tol": 0.8
+      "mean": 2.181659460067749,
+      "tol": 0.46128621477127074
     },
     "ang_elb_L": {
-      "mean": 165.2628173828125,
-      "tol": 16.54418354736328
+      "mean": 153.3379364013672,
+      "tol": 9.20027618408203
     },
     "ang_elb_R": {
-      "mean": 162.98069763183594,
-      "tol": 16.875026678466792
+      "mean": 155.78843688964844,
+      "tol": 19.70838169555664
     }
   },
   "meta": {
+    "format": "body_axes_v4",
     "windows": 15,
-    "window_duration_s": 0.5,
-    "rest_between_windows_s": 1.8,
-    "vis_threshold": 0.5,
-    "stillness_max": 0.03,
+    "window_duration_s": 0.55,
+    "rest_between_windows_s": 1.6,
+    "stillness_max": 0.035,
     "min_valid_frames_per_window": 5,
+    "vis_thresholds": {
+      "core": 0.55,
+      "wrist": 0.25,
+      "ankle": 0.25,
+      "face": 0.25
+    },
     "robust": "center=median, sigma=MAD*1.4826, tol=max(|center|*0.06, base_abs, sigma*2.8) clamped",
     "tol_clamp": {
       "angle": [
