@@ -478,21 +478,31 @@ class PoseDetector:
 
     def detect(self, pose_landmarks):
         detected = {"arms": "UNKNOWN", "legs": "UNKNOWN", "torso": "UNKNOWN"}
+        dbg = {}
+
         feats, vis_map = extract_features_and_vismap(pose_landmarks.landmark)
 
         for g in ["arms", "legs", "torso"]:
-            name = detect_group(feats, vis_map, g)
+            name, best, second, counts, reason = detect_group(feats, vis_map, g)
             name = self._smooth(g, name)
             detected[g] = name
 
-        # Decide compound if any matches (greedy: first match)
+            dbg[g] = {
+                "best": best,
+                "second": second,
+                "counts": counts,
+                "reason": reason
+            }
+
+        # Decide compound if any matches
         compound = None
         for cname in COMPOUNDS.keys():
             if matches_compound(detected, cname):
                 compound = cname
                 break
 
-        return detected, compound
+        return detected, compound, dbg, feats, vis_map
+
 
 # ============================================================
 # GAME: build a list of playable prompts
