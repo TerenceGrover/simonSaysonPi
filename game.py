@@ -118,7 +118,7 @@ def play_prompt_audio(target_name, simon):
     play_random_wav_from_folder(SIMON_DIR)
 
     # small human pause
-    time.sleep(random.uniform(0.12, 0.22))
+    time.sleep(random.uniform(2.12, 2.52))
 
     # command (random variant)
     play_random_wav_from_folder(cmd_dir)
