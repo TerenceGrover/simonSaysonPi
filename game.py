@@ -577,10 +577,10 @@ def main():
 
                 arr = np.frombuffer(jpg, dtype=np.uint8)
                 frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
                 if frame is None:
                     continue
 
+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 res = pose.process(rgb)
 
