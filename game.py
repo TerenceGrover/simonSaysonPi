@@ -577,6 +577,7 @@ def main():
 
                 arr = np.frombuffer(jpg, dtype=np.uint8)
                 frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
                 if frame is None:
                     continue
 
