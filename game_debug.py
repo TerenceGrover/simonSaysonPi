@@ -726,7 +726,7 @@ def main():
 
                 if res.pose_landmarks:
                     mp_draw.draw_landmarks(frame, res.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-                    detected_groups, detected_comp = detector.detect(res.pose_landmarks)
+                    detected_groups, detected_comp, dbg, feats, vis_map = detector.detect(res.pose_landmarks)
                 else:
                     detected_groups = {"arms":"UNKNOWN","legs":"UNKNOWN","torso":"UNKNOWN"}
                     detected_comp = None
