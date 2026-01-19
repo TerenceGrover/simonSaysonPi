@@ -28,6 +28,9 @@ FPS = 10
 FRAME_TIME = 1.0 / FPS
 WINDOW_NAME = "SIMON SAYS (POSE)"
 ROTATE = cv2.ROTATE_90_COUNTERCLOCKWISE  # or CLOCKWISE if wrong direction
+AUDIO_ROOT = Path("audio")
+SIMON_DIR = AUDIO_ROOT / "simon_says.wav"
+COMMANDS_DIR = AUDIO_ROOT / "commands"
 
 RPICAM_CMD = [
     "rpicam-vid",
@@ -92,6 +95,33 @@ LM = {
     "L_ANK": 27,
     "R_ANK": 28,
 }
+
+def play_wav(path):
+    if not path or not os.path.exists(path):
+        return
+    subprocess.Popen(
+        ["aplay", "-q", path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
+def play_prompt_audio(target_name, simon):
+    if not simon:
+        return  # trap = silence
+
+    cmd_dir = COMMANDS_DIR / target_name
+    if not cmd_dir.exists():
+        print(f"[WARN] Missing command audio for {target_name}")
+        return
+
+    # Simon says (random variant)
+    play_random_wav_from_folder(SIMON_DIR)
+
+    # small human pause
+    time.sleep(random.uniform(0.12, 0.22))
+
+    # command (random variant)
+    play_random_wav_from_folder(cmd_dir)
 
 def thr_for_idx(idx: int) -> float:
     if idx in (LM["L_SHO"], LM["R_SHO"], LM["L_HIP"], LM["R_HIP"], LM["L_KNE"], LM["R_KNE"]):
@@ -528,6 +558,19 @@ def read_frame(jpeg_stream, max_skip=5):
         return None
     return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
+def play_random_wav_from_folder(folder: Path):
+    if not folder.exists() or not folder.is_dir():
+        print(f"[WARN] Missing audio folder: {folder}")
+        return
+
+    files = sorted(folder.glob("*.wav"))
+    if not files:
+        print(f"[WARN] No wav files in: {folder}")
+        return
+
+    wav = random.choice(files)
+    play_wav(str(wav))
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -577,6 +620,7 @@ def main():
             target_kind, target_name = random.choice(pool)
 
             simon = (random.random() < SIMON_SAYS_PROB)
+            play_prompt_audio(target_name, simon)
             prompt_text = ("SIMON SAYS: " if simon else "DO: ")
             label = pretty_label(target_kind, target_name)
 
