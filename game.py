@@ -27,6 +27,7 @@ W, H = 1280, 720
 FPS = 7
 FRAME_TIME = 1.0 / FPS
 WINDOW_NAME = "SIMON SAYS (POSE)"
+ROTATE = cv2.ROTATE_90_COUNTERCLOCKWISE  # or CLOCKWISE if wrong direction
 
 RPICAM_CMD = [
     "rpicam-vid",
@@ -513,6 +514,17 @@ def draw_hud(frame, score, streak, detected_groups, detected_compound, msg_top, 
     cv2.putText(frame, msg_mid, (20, 215), cv2.FONT_HERSHEY_SIMPLEX, 1.1, color, 3)
     cv2.putText(frame, msg_bot, (20, 270), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
 
+def read_frame(jpeg_stream):
+    jpg = next(jpeg_stream, None)
+    if jpg is None:
+        return None
+    arr = np.frombuffer(jpg, dtype=np.uint8)
+    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if frame is None:
+        return None
+    frame = cv2.rotate(frame, ROTATE)  # ALWAYS rotate in one place
+    return frame
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -556,6 +568,7 @@ def main():
     hold_sec   = HOLD_SEC
 
     try:
+        jpeg_stream = mjpeg_frames_from_pipe(proc.stdout)
         while True:
             # pick target
             target_kind, target_name = random.choice(pool)
@@ -568,18 +581,10 @@ def main():
             t_prompt_end = time.time() + PROMPT_SEC
             detected_groups = {"arms":"UNKNOWN","legs":"UNKNOWN","torso":"UNKNOWN"}
             detected_comp = None
-            jpeg_stream = mjpeg_frames_from_pipe(proc.stdout)
 
             while time.time() < t_prompt_end:
 
-                jpg = next(jpeg_stream, None)
-
-                t0 = time.time()
-                if jpg is None:
-                    return
-
-                arr = np.frombuffer(jpg, dtype=np.uint8)
-                frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                frame = read_frame(jpeg_stream)
                 if frame is None:
                     continue
 
@@ -620,12 +625,7 @@ def main():
 
             while time.time() < t_deadline:
                 t0 = time.time()
-                jpg = next(mjpeg_frames_from_pipe(proc.stdout), None)
-                if jpg is None:
-                    return
-
-                arr = np.frombuffer(jpg, dtype=np.uint8)
-                frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                frame = read_frame(jpeg_stream)
                 if frame is None:
                     continue
 
@@ -690,11 +690,7 @@ def main():
                 t_end = time.time() + 1.5
                 while time.time() < t_end:
                     t0 = time.time()
-                    jpg = next(mjpeg_frames_from_pipe(proc.stdout), None)
-                    if jpg is None:
-                        return
-                    arr = np.frombuffer(jpg, dtype=np.uint8)
-                    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                    frame = read_frame(jpeg_stream)
                     if frame is None:
                         continue
 
@@ -732,11 +728,7 @@ def main():
                 t_end = time.time() + 0.7
                 while time.time() < t_end:
                     t0 = time.time()
-                    jpg = next(mjpeg_frames_from_pipe(proc.stdout), None)
-                    if jpg is None:
-                        return
-                    arr = np.frombuffer(jpg, dtype=np.uint8)
-                    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                    frame = read_frame(jpeg_stream)
                     if frame is None:
                         continue
 
