@@ -18,7 +18,9 @@
     },
     "d_wri_wri": {
       "max": 1.6
-    }
+    },
+    "h_wri_vs_sho_L": { "min": -1.2 },
+    "h_wri_vs_sho_R": { "min": -1.2 }
   },
   "features": {
     "d_wri_opp_elb_L": {

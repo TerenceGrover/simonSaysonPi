@@ -11,8 +11,7 @@
   "constraints": {
     "h_wri_vs_sho_L": { "max": -0.35 },
     "h_wri_vs_sho_R": { "max": -0.35 },
-    "d_wri_same_sho_L": { "min": 2.0 },
-    "d_wri_same_sho_R": { "min": 2.0 }
+    "d_wri_ank_min": { "min": 1.2 }
   },
   "features": {
     "h_wri_vs_sho_L": {
