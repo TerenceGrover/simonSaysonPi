@@ -563,7 +563,7 @@ def draw_hud(frame, score, streak, detected_groups, detected_compound,
     cv2.putText(frame, f"compound: {comp}", (20, y+70), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
 
     # big messages
-    cv2.putText(frame, msg_top, (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.4, color, 4)
+    cv2.putText(frame, msg_top, (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 4)
     cv2.putText(frame, msg_mid, (20, 215), cv2.FONT_HERSHEY_SIMPLEX, 1.1, color, 3)
     cv2.putText(frame, msg_bot, (20, 270), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
     if dbg and "arms" in dbg:
@@ -583,7 +583,7 @@ def draw_hud(frame, score, streak, detected_groups, detected_compound,
             txt[:120],
             (20, 120),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            0.6,
             (0, 255, 255),
             2
         )
