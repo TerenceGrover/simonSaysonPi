@@ -583,7 +583,7 @@ def main():
             detected_comp = None
 
             while time.time() < t_prompt_end:
-
+                t0 = time.time()
                 frame = read_frame(jpeg_stream)
                 if frame is None:
                     continue
