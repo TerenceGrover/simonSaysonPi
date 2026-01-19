@@ -99,15 +99,13 @@ LM = {
 def play_wav(path):
     if not path or not os.path.exists(path):
         return
-    subprocess.Popen(
-        ["aplay", "-q", path],
+    subprocess.run(
+        ["aplay", str(path)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
 
 def play_prompt_audio(target_name, simon):
-    if not simon:
-        return  # trap = silence
 
     cmd_dir = COMMANDS_DIR / target_name
     if not cmd_dir.exists():
@@ -115,10 +113,11 @@ def play_prompt_audio(target_name, simon):
         return
 
     # Simon says (random variant)
-    play_random_wav_from_folder(SIMON_DIR)
+    if simon:
+        play_random_wav_from_folder(SIMON_DIR)
 
     # small human pause
-    time.sleep(random.uniform(2.12, 2.52))
+    time.sleep(random.uniform(0.12, 0.52))
 
     # command (random variant)
     play_random_wav_from_folder(cmd_dir)
