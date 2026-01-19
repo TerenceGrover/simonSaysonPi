@@ -588,7 +588,6 @@ def main():
                 if frame is None:
                     continue
 
-                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 res = pose.process(rgb)
 
