@@ -574,7 +574,7 @@ def draw_hud(frame, score, streak, detected_groups, detected_compound,
         reason = a["reason"]
 
         txt = (
-            f"ARMS dbg | poses={cands} visOK={vOK} consOK={cOK} "
+            f"ARMS dbg | poses={cands} visOK={vOK} consOK={cOK} \n"
             f"best={best:.2f} second={second:.2f} {reason}"
         )
 
@@ -583,7 +583,7 @@ def draw_hud(frame, score, streak, detected_groups, detected_compound,
             txt[:120],
             (20, 120),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
+            0.5,
             (0, 255, 255),
             2
         )
