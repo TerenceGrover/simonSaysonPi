@@ -58,8 +58,8 @@ SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
 MAX_ACCEPTABLE_SCORE = {"arms": 2.8, "legs": 3.2, "torso": 3.3}
 MARGIN_MIN          = {"arms": 0.45, "legs": 0.55, "torso": 0.60}
 
-SMOOTH_WIN  = 9
-SMOOTH_NEED = 6
+SMOOTH_WIN  = 1
+SMOOTH_NEED = 1
 
 VIS_CORE  = 0.50
 VIS_WRIST = 0.18
