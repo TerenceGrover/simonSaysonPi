@@ -11,7 +11,7 @@
   "constraints": {
     "ang_kne_L": { "max": 90 },
     "ang_kne_R": { "min": 150 },
-
+    "d_ank_ank": { "min": 1.2 },
     "h_ank_vs_hip_L": { "min": -2.6 },
     "h_ank_vs_hip_R": { "max": -3.2 }
   },
