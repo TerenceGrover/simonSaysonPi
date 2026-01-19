@@ -58,7 +58,7 @@ SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
 # --------------------
 # POSE VALIDATOR TUNING (your defaults)
 # --------------------
-MAX_ACCEPTABLE_SCORE = {"arms": 12, "legs": 4, "torso": 4}
+MAX_ACCEPTABLE_SCORE = {"arms": 4, "legs": 4, "torso": 4}
 MARGIN_MIN          = {"arms": 0.45, "legs": 0.55, "torso": 0.60}
 
 SMOOTH_WIN  = 1
@@ -200,7 +200,10 @@ def load_assets():
             g = data.get("group")
             if g not in POSES_BY_GROUP:
                 continue
-            data.setdefault("active_features", list(data.get("features", {}).keys()))
+            if "active_features" not in data:
+                raise RuntimeError(
+                    f"{data.get('pose_name')} missing active_features — this WILL break detection"
+                )
             data.setdefault("constraints", {})
             sanitize_constraints(data)
             POSES_BY_GROUP[g].append(data)
