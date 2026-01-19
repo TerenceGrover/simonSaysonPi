@@ -29,7 +29,7 @@ FRAME_TIME = 1.0 / FPS
 WINDOW_NAME = "SIMON SAYS (POSE)"
 ROTATE = cv2.ROTATE_90_COUNTERCLOCKWISE  # or CLOCKWISE if wrong direction
 AUDIO_ROOT = Path("audio")
-SIMON_DIR = AUDIO_ROOT / "simon_says.wav"
+SIMON_DIR = AUDIO_ROOT / "simon_says"
 COMMANDS_DIR = AUDIO_ROOT / "commands"
 
 RPICAM_CMD = [
