@@ -115,12 +115,9 @@ def play_prompt_audio(target_name, simon):
     # Simon says (random variant)
     if simon:
         play_random_wav_from_folder(SIMON_DIR)
-
-    # small human pause
-    time.sleep(random.uniform(0.12, 0.52))
-
-    # command (random variant)
-    play_random_wav_from_folder(cmd_dir)
+        play_random_wav_from_folder(cmd_dir)
+    else:
+        play_random_wav_from_folder(cmd_dir)
 
 def thr_for_idx(idx: int) -> float:
     if idx in (LM["L_SHO"], LM["R_SHO"], LM["L_HIP"], LM["R_HIP"], LM["L_KNE"], LM["R_KNE"]):
