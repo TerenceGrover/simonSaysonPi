@@ -626,7 +626,7 @@ def pick_next_command(current_state):
 
     # Fallback: if nothing is valid, allow a random "hands_up" or do nothing
     if not valid:
-        return random.choice([c for c in COMMANDS if c.name in ("arms_hands_up", "legs_squat", "legs_split")])
+        return None
 
     return weighted_choice(valid, weights)
 
@@ -684,6 +684,8 @@ def main():
             current_locked = dict(game_state.state)
 
             cmd = pick_next_command(current_locked)
+            if cmd is None:
+              continue  # no legal move, skip this tick
             target_name = cmd.name
             target_kind = "atomic"  # treat commands as atomic actions
 
