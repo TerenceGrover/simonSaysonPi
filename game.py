@@ -766,21 +766,43 @@ def main():
 
                 obs = obs_from_detected(detected_groups)
 
-                # Groups not affected by this command must stay locked AT ALL TIMES
-                locked_groups = {"arms","legs","torso"} - cmd.affected_groups
-
                 for g in ("arms", "legs", "torso"):
+                    cur = current_locked[g]
+                    seen = obs[g]
+
+                    # If this group is NOT affected by the command,
+                    # it must remain EXACTLY the same.
                     if g not in cmd.affected_groups:
-                        if current_locked[g] != "UNKNOWN" and obs[g] == "UNKNOWN":
-                            fail_reason = "YOU RELEASED WITHOUT PERMISSION."
+                        if seen != cur:
+                            fail_reason = "YOU MOVED WITHOUT PERMISSION."
                             break
+
+                    # If this group IS affected by the command:
+                    else:
+                        target = next_state[g]
+
+                        # Case 1 — group is locked in a pose:
+                        if cur != "UNKNOWN":
+                            # Only legal transition is: pose → UNKNOWN
+                            if target == "UNKNOWN":
+                                if seen != "UNKNOWN":
+                                    fail_reason = "YOU FAILED TO RELEASE."
+                                    break
+                            else:
+                                # pose → pose is NEVER allowed
+                                fail_reason = "ILLEGAL TRANSITION."
+                                break
+
+                        # Case 2 — group is neutral:
+                        else:
+                            # Only legal transition is: UNKNOWN → target
+                            if seen not in ("UNKNOWN", target):
+                                fail_reason = "YOU MOVED WITHOUT PERMISSION."
+                                break
 
                 if fail_reason:
                     break
 
-                if not obs_matches_state(obs, current_locked, groups=locked_groups):
-                    fail_reason = "YOU MOVED WITHOUT PERMISSION."
-                    break
 
                 # Trap round: even affected group must NOT become the commanded next_state
                 if not simon:
