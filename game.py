@@ -11,13 +11,9 @@ import numpy as np
 import mediapipe as mp
 
 from audioManager import play_prompt_audio
-
-from loadHelpers import (
-    load_json,
-    sanitize_constraints
-)
-
+from loadHelpers import (load_json, sanitize_constraints)
 from mjpegDecoder import mjpeg_frames_from_pipe
+from passContraints import passes_constraints
 
 # ============================================================
 # SIMON SAYS (Pose Edition)
@@ -73,7 +69,7 @@ SMOOTH_WIN  = 1
 SMOOTH_NEED = 1
 
 VIS_CORE  = 0.50
-VIS_WRIST = 0.18
+VIS_WRIST = 0.1
 VIS_ANKLE = 0.1
 VIS_FACE  = 0.18
 
@@ -288,28 +284,6 @@ def pose_visibility_ok(vis_map, pose_def):
             return False
     return True
 
-def passes_constraints(feats, pose_def):
-    cons = pose_def.get("_constraints_sanitized", pose_def.get("constraints", {})) or {}
-    for k, rule in cons.items():
-        if k not in feats:
-            return False
-        v = feats[k]
-        if "min" in rule and v < rule["min"]:
-            return False
-        if "max" in rule and v > rule["max"]:
-            return False
-
-    raw = pose_def.get("raw_name", "")
-    if raw in ("touch_nose", "hand_on_head"):
-        kL, kR = ("d_wri_nose_L", "d_wri_nose_R") if raw == "touch_nose" else ("d_wri_head_L", "d_wri_head_R")
-        refL = pose_def["features"].get(kL, {"mean": 0.0, "tol": 0.6})
-        refR = pose_def["features"].get(kR, {"mean": 0.0, "tol": 0.6})
-        thr = min(refL["mean"] + refL["tol"] * 1.2, refR["mean"] + refR["tol"] * 1.2)
-        if min(feats.get(kL, 9e9), feats.get(kR, 9e9)) > thr:
-            return False
-
-    return True
-
 def score_pose(feats, pose_def):
     used = pose_def.get("active_features", [])
     if not used:
@@ -425,8 +399,6 @@ def build_prompt_pool():
     compounds = [("compound", name) for name in COMPOUNDS.keys()]
     pool = atomic + compounds
 
-    # If you want to exclude specific spicy poses, do it here:
-    # pool = [x for x in pool if x[1] not in ("legs_split",)]
     random.shuffle(pool)
     return pool
 
