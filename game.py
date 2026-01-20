@@ -491,97 +491,114 @@ class GameState:
     def apply(self, next_state_dict):
         self.state.update(next_state_dict)
 
-# --------- command definitions ----------
+# ============================================================
+# STRICT COMMAND SYSTEM (HARD LOCK, NO ILLEGAL PICKS)
+# ============================================================
+
+RETURN_BOOST = 6.0   # make releases common, avoids softlocks
+BASE_W = 1.0
+
+GROUPS = ("arms", "legs", "torso")
+
 class Command:
-    def __init__(self, name, affected_groups, apply_fn, valid_fn, weight_fn):
-        self.name = name  # used for audio folder lookup
+    def __init__(self, name, affected_groups, apply_fn, weight_fn=None):
+        self.name = name
         self.affected_groups = set(affected_groups)
-        self.apply_fn = apply_fn      # (state_dict)-> new_state_dict
-        self.valid_fn = valid_fn      # (state_dict)-> bool
-        self.weight_fn = weight_fn    # (state_dict)-> float
+        self.apply_fn = apply_fn
+        self.weight_fn = weight_fn or (lambda st: BASE_W)
 
-    def is_valid(self, st): return self.valid_fn(st)
-    def weight(self, st):  return float(self.weight_fn(st))
-    def apply(self, st):   return self.apply_fn(st)
+    def apply(self, st):
+        return self.apply_fn(st)
 
-def clamp_w(w): 
-    return max(0.0, float(w))
+    def weight(self, st):
+        return float(self.weight_fn(st))
 
-# Higher probability for "return to neutral" (and trap counterpart)
-RETURN_BOOST = 4.0
+
+def clamp_w(w):
+    try:
+        return max(0.0, float(w))
+    except Exception:
+        return 0.0
+
 
 def build_commands():
-    """
-    Commands operate on pose-level, not sub-limb level, because your detector outputs
-    group-level pose strings.
-    If later you add unilateral arm poses, you can extend this list.
-    """
     cmds = []
 
-    # ---- ARMS ----
-    # "Hands up" sets arms_hands_up
+    # ---------- ARMS ----------
+    # set
     cmds.append(Command(
         name="arms_hands_up",
         affected_groups=("arms",),
         apply_fn=lambda st: {"arms": "arms_hands_up"},
-        valid_fn=lambda st: st["arms"] != "arms_hands_up",
-        weight_fn=lambda st: 1.0
+        weight_fn=lambda st: 0.0 if st["arms"] == "arms_hands_up" else BASE_W
     ))
 
-    # Release arms back to neutral (UNKNOWN)
+    # release (always available when locked)
     cmds.append(Command(
-        name="arms_hands_down",  # audio folder can still be arms_hands_down
+        name="arms_hands_down",
         affected_groups=("arms",),
         apply_fn=lambda st: {"arms": "UNKNOWN"},
-        valid_fn=lambda st: st["arms"] != "UNKNOWN",
-        weight_fn=lambda st: RETURN_BOOST if st["arms"] != "UNKNOWN" else 0.0
+        weight_fn=lambda st: (RETURN_BOOST if st["arms"] != "UNKNOWN" else 0.0)
     ))
 
-    # Example other arms poses if you have them:
-    for pname in ["arms_t_pose", "arms_cross_arms", "arms_touch_nose", "arms_hand_on_head"]:
+    # (Optional) other arm poses: only reachable from neutral, released back to neutral
+    for pn in ["arms_t_pose", "arms_cross_arms", "arms_touch_nose", "arms_hand_on_head"]:
         cmds.append(Command(
-            name=pname,
+            name=pn,
             affected_groups=("arms",),
-            apply_fn=lambda st, pn=pname: {"arms": pn},
-            valid_fn=lambda st, pn=pname: st["arms"] != pn and st["arms"] != "UNKNOWN",
-            # NOTE: If you want these available from neutral too, remove st["arms"] != "UNKNOWN"
-            weight_fn=lambda st: 0.6
-        ))
-        # release from those poses (go neutral)
-        cmds.append(Command(
-            name="arms_hands_down",
-            affected_groups=("arms",),
-            apply_fn=lambda st: {"arms": "UNKNOWN"},
-            valid_fn=lambda st: st["arms"] == pname,
-            weight_fn=lambda st: RETURN_BOOST
+            apply_fn=lambda st, _pn=pn: {"arms": _pn},
+            weight_fn=lambda st: (0.6 if st["arms"] == "UNKNOWN" else 0.0)
         ))
 
-    # ---- LEGS ----
-    # Set leg poses
-    for leg_pose in ["legs_single_leg_up_L", "legs_single_leg_up_R", "legs_split", "legs_squat"]:
+    # ---------- LEGS ----------
+    for lp in ["legs_split", "legs_squat", "legs_single_leg_up_L", "legs_single_leg_up_R"]:
         cmds.append(Command(
-            name=leg_pose,
+            name=lp,
             affected_groups=("legs",),
-            apply_fn=lambda st, lp=leg_pose: {"legs": lp},
-            valid_fn=lambda st, lp=leg_pose: (st["legs"] == "UNKNOWN") and (st["legs"] != lp),
-            weight_fn=lambda st: 1.0
+            apply_fn=lambda st, _lp=lp: {"legs": _lp},
+            weight_fn=lambda st: (BASE_W if st["legs"] == "UNKNOWN" else 0.0)  # ONLY from neutral
         ))
 
-    # Stand / neutral
     cmds.append(Command(
         name="legs_stand_up",
         affected_groups=("legs",),
         apply_fn=lambda st: {"legs": "UNKNOWN"},
-        valid_fn=lambda st: st["legs"] != "UNKNOWN",
-        weight_fn=lambda st: RETURN_BOOST if st["legs"] != "UNKNOWN" else 0.0
+        weight_fn=lambda st: (RETURN_BOOST if st["legs"] != "UNKNOWN" else 0.0)
     ))
 
-    # ---- TORSO ---- (optional)
-    # If torso poses exist, add them similarly.
+    # ---------- TORSO (if you have it) ----------
+    # Same pattern as legs: only from neutral, and a torso_neutral release command.
 
     return cmds
 
+
 COMMANDS = build_commands()
+
+
+def _is_legal_transition(cur, nxt):
+    """
+    HARD RULE:
+      - If cur == UNKNOWN: nxt can be UNKNOWN or a pose (set)
+      - If cur != UNKNOWN: nxt MUST be UNKNOWN (release only)
+    """
+    if cur == "UNKNOWN":
+        return True  # staying UNKNOWN or setting a pose is allowed
+    # locked in pose -> only release allowed
+    return (nxt == "UNKNOWN")
+
+
+def _command_is_legal_for_state(cmd, st):
+    applied = cmd.apply(st)
+    for g in cmd.affected_groups:
+        cur = st[g]
+        nxt = applied.get(g, cur)
+        if not _is_legal_transition(cur, nxt):
+            return False
+        # ALSO ban "pose -> different pose" explicitly
+        if cur != "UNKNOWN" and nxt != "UNKNOWN":
+            return False
+    return True
+
 
 def weighted_choice(items, weights):
     total = sum(weights)
@@ -595,40 +612,40 @@ def weighted_choice(items, weights):
             return it
     return items[-1]
 
+
 def pick_next_command(current_state):
     """
-    Build a valid pool depending on current locked state.
-    Impossible combos -> valid_fn returns False or weight 0.
-    Return-to-neutral gets higher weight.
+    This picker cannot output illegal commands.
+    It enforces:
+      - If a group is locked, only its release command is selectable.
+      - Legs: no pose->pose ever, must stand_up between.
+      - Release commands get boosted weight to prevent softlocks.
     """
-    valid = []
-    weights = []
     st = current_state
 
+    valid = []
+    weights = []
+
     for c in COMMANDS:
-        # ---- HARD BLOCK: no pose-to-pose transitions ----
-        for g in c.affected_groups:
-            if st[g] != "UNKNOWN":
-                # only allow commands that RELEASE this group
-                applied = c.apply(st)
-                if applied.get(g, st[g]) != "UNKNOWN":
-                    break
-        else:
-            # passed hard block
-            if not c.is_valid(st):
-                continue
-            w = clamp_w(c.weight(st))
-            if w <= 0:
-                continue
-            valid.append(c)
-            weights.append(w)
+        if not _command_is_legal_for_state(c, st):
+            continue
+        w = clamp_w(c.weight(st))
+        if w <= 0:
+            continue
+        valid.append(c)
+        weights.append(w)
 
-
-    # Fallback: if nothing is valid, allow a random "hands_up" or do nothing
+    # If nothing is valid, you are in a contradictory state — force releases
     if not valid:
+        # force-release priority: legs, arms, torso
+        for release in ("legs_stand_up", "arms_hands_down"):
+            for c in COMMANDS:
+                if c.name == release:
+                    return c
         return None
 
     return weighted_choice(valid, weights)
+
 
 # ============================================================
 # MAIN
