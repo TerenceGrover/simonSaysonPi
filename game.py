@@ -697,6 +697,7 @@ def main():
             next_state = dict(current_locked)
             next_state.update(cmd.apply(current_locked))
 
+            print(f"Next command: {'SIMON SAYS' if simon else 'TRAP'} -> {target_name} | ")
             play_prompt_audio(target_name, simon)
             prompt_text = ("SIMON SAYS: " if simon else "DO: ")
             label = pretty_label(target_kind, target_name)
