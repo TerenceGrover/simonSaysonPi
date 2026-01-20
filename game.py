@@ -606,13 +606,23 @@ def pick_next_command(current_state):
     st = current_state
 
     for c in COMMANDS:
-        if not c.is_valid(st):
-            continue
-        w = clamp_w(c.weight(st))
-        if w <= 0:
-            continue
-        valid.append(c)
-        weights.append(w)
+        # ---- HARD BLOCK: no pose-to-pose transitions ----
+        for g in c.affected_groups:
+            if st[g] != "UNKNOWN":
+                # only allow commands that RELEASE this group
+                applied = c.apply(st)
+                if applied.get(g, st[g]) != "UNKNOWN":
+                    break
+        else:
+            # passed hard block
+            if not c.is_valid(st):
+                continue
+            w = clamp_w(c.weight(st))
+            if w <= 0:
+                continue
+            valid.append(c)
+            weights.append(w)
+
 
     # Fallback: if nothing is valid, allow a random "hands_up" or do nothing
     if not valid:
