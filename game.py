@@ -526,21 +526,42 @@ def build_commands():
     cmds = []
 
     # ---------- ARMS ----------
-    # set
+    # single arm up L
+    cmds.append(Command(
+        name="arms_single_arm_up_L",
+        affected_groups=("arms",),
+        apply_fn=lambda st: {"arms": "arms_single_arm_up_L"},
+        weight_fn=lambda st: BASE_W if st["arms"] == "UNKNOWN" else 0.0
+    ))
+
+    # single arm up R
+    cmds.append(Command(
+        name="arms_single_arm_up_R",
+        affected_groups=("arms",),
+        apply_fn=lambda st: {"arms": "arms_single_arm_up_R"},
+        weight_fn=lambda st: BASE_W if st["arms"] == "UNKNOWN" else 0.0
+    ))
+
+    # both arms up
     cmds.append(Command(
         name="arms_hands_up",
         affected_groups=("arms",),
         apply_fn=lambda st: {"arms": "arms_hands_up"},
-        weight_fn=lambda st: 0.0 if st["arms"] == "arms_hands_up" else BASE_W
+        weight_fn=lambda st: (
+            BASE_W
+            if st["arms"] in ("UNKNOWN", "arms_single_arm_up_L", "arms_single_arm_up_R")
+            else 0.0
+        )
     ))
 
-    # release (always available when locked)
+    # release arms (always allowed when locked)
     cmds.append(Command(
         name="arms_hands_down",
         affected_groups=("arms",),
         apply_fn=lambda st: {"arms": "UNKNOWN"},
-        weight_fn=lambda st: (RETURN_BOOST if st["arms"] != "UNKNOWN" else 0.0)
+        weight_fn=lambda st: RETURN_BOOST if st["arms"] != "UNKNOWN" else 0.0
     ))
+
 
     # (Optional) other arm poses: only reachable from neutral, released back to neutral
     for pn in ["arms_t_pose", "arms_cross_arms", "arms_touch_nose", "arms_hand_on_head"]:
@@ -576,16 +597,25 @@ def build_commands():
 COMMANDS = build_commands()
 
 
-def _is_legal_transition(cur, nxt):
-    """
-    HARD RULE:
-      - If cur == UNKNOWN: nxt can be UNKNOWN or a pose (set)
-      - If cur != UNKNOWN: nxt MUST be UNKNOWN (release only)
-    """
+def _is_legal_transition(cur, nxt, group):
+    if group != "arms":
+        # legs / torso logic (strict)
+        if cur == "UNKNOWN":
+            return True
+        return nxt == "UNKNOWN"
+
+    # ----- ARMS SPECIAL CASE -----
+
     if cur == "UNKNOWN":
-        return True  # staying UNKNOWN or setting a pose is allowed
-    # locked in pose -> only release allowed
-    return (nxt == "UNKNOWN")
+        return True
+
+    # single arm → both arms up is allowed
+    if cur in ("arms_single_arm_up_L", "arms_single_arm_up_R") and nxt == "arms_hands_up":
+        return True
+
+    # otherwise, only release is allowed
+    return nxt == "UNKNOWN"
+
 
 
 def _command_is_legal_for_state(cmd, st):
@@ -593,7 +623,7 @@ def _command_is_legal_for_state(cmd, st):
     for g in cmd.affected_groups:
         cur = st[g]
         nxt = applied.get(g, cur)
-        if not _is_legal_transition(cur, nxt):
+        if not _is_legal_transition(cur, nxt, g):
             return False
         # ALSO ban "pose -> different pose" explicitly
         if cur != "UNKNOWN" and nxt != "UNKNOWN":
@@ -876,7 +906,7 @@ def main():
                 requests.get("http://10.0.0.148/release")
                 #fucking crash the whole thing just break
                 break 
-            
+
             else:
                 if simon:
                     game_state.apply(cmd.apply(game_state.state))
