@@ -783,22 +783,6 @@ def main():
                         success = True
                         break
 
-
-                if simon:
-                    if is_match:
-                        held_for += dt
-                    else:
-                        held_for = max(0.0, held_for - dt*0.8)  # tiny forgiveness, not too kind
-
-                    if held_for >= hold_sec:
-                        success = True
-                        break
-                else:
-                    # trap round: if they match, instant fail
-                    if is_match:
-                        fail_reason = "YOU OBEYED A LIE."
-                        break
-
                 remaining = max(0.0, t_deadline - time.time())
                 need = max(0.0, hold_sec - held_for)
 
@@ -808,7 +792,6 @@ def main():
                     msg_mid=("HOLD IT!" if simon else "DON'T DO IT."),
                     msg_bot=(f"held={held_for:.2f}/{hold_sec:.2f}  need={need:.2f}  left={remaining:.1f}s"
                              if simon else f"left={remaining:.1f}s"),
-                    color=(0,255,0) if (simon and is_match) else (255,255,255)
                 )
                 cv2.imshow(WINDOW_NAME, frame)
                 if (cv2.waitKey(1) & 0xFF) == ord("q"):
