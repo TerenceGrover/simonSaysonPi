@@ -464,7 +464,7 @@ def poses_match(expected_pose_name, observed_pose_name, group):
         if expected_pose_name in ("arms_hands_down", "UNKNOWN"):
             return observed_pose_name == "UNKNOWN"
     if group == "legs":
-        if expected_pose_name in ("legs_stand", "UNKNOWN"):
+        if expected_pose_name in ("legs_stand_up", "UNKNOWN"):
             return observed_pose_name == "UNKNOWN"
     # Default: strict match
     return observed_pose_name == expected_pose_name
@@ -569,7 +569,7 @@ def build_commands():
 
     # Stand / neutral
     cmds.append(Command(
-        name="legs_stand",
+        name="legs_stand_up",
         affected_groups=("legs",),
         apply_fn=lambda st: {"legs": "UNKNOWN"},
         valid_fn=lambda st: st["legs"] != "UNKNOWN",
@@ -758,6 +758,15 @@ def main():
 
                 # Groups not affected by this command must stay locked AT ALL TIMES
                 locked_groups = {"arms","legs","torso"} - cmd.affected_groups
+
+                for g in ("arms", "legs", "torso"):
+                    if g not in cmd.affected_groups:
+                        if current_locked[g] != "UNKNOWN" and obs[g] == "UNKNOWN":
+                            fail_reason = "YOU RELEASED WITHOUT PERMISSION."
+                            break
+
+                if fail_reason:
+                    break
 
                 if not obs_matches_state(obs, current_locked, groups=locked_groups):
                     fail_reason = "YOU MOVED WITHOUT PERMISSION."
