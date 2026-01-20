@@ -627,6 +627,7 @@ def pick_next_command(current_state):
     weights = []
 
     for c in COMMANDS:
+        print(f"Checking command {c.name} for state {st}")
         if not _command_is_legal_for_state(c, st):
             continue
         w = clamp_w(c.weight(st))
