@@ -596,7 +596,6 @@ def build_commands():
 
 COMMANDS = build_commands()
 
-
 def _is_legal_transition(cur, nxt, group):
     if group != "arms":
         # legs / torso logic (strict)
@@ -615,7 +614,6 @@ def _is_legal_transition(cur, nxt, group):
 
     # otherwise, only release is allowed
     return nxt == "UNKNOWN"
-
 
 
 def _command_is_legal_for_state(cmd, st):
