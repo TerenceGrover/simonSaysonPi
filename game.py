@@ -8,6 +8,7 @@ from pathlib import Path
 from collections import defaultdict, deque
 import cv2
 import numpy as np
+import requests
 import mediapipe as mp
 
 from audioManager import play_prompt_audio
@@ -871,35 +872,9 @@ def main():
 
             # scoring
             if fail_reason:
-                # show fail screen
-                t_end = time.time() + 1.5
-                while time.time() < t_end:
-                    t0 = time.time()
-                    frame = read_frame(jpeg_stream)
-                    if frame is None:
-                        continue
-
-                    draw_hud(
-                        frame, score, streak, detected_groups, detected_comp,
-                        msg_top="FAIL",
-                        msg_mid=fail_reason,
-                        msg_bot=f"Final streak: {streak}",
-                        color=(0,0,255)
-                    )
-                    cv2.imshow(WINDOW_NAME, frame)
-                    if (cv2.waitKey(1) & 0xFF) == ord("q"):
-                        return
-
-                    elapsed = time.time() - t0
-                    sleep_for = FRAME_TIME - elapsed
-                    if sleep_for > 0:
-                        time.sleep(sleep_for)
-
-                # reset run
-                streak = 0
-                # optional: soften difficulty back a touch after death
-                time_limit = min(TIME_LIMIT_SEC, time_limit / SPEEDUP_FACTOR)
-                hold_sec   = min(HOLD_SEC, hold_sec / SPEEDUP_FACTOR)
+                # Ping http://10.0.0.148/release
+                requests.post("http://10.0.0.148/release")
+                break
             else:
                 if simon:
                     game_state.apply(cmd.apply(game_state.state))
