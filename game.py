@@ -873,8 +873,10 @@ def main():
             # scoring
             if fail_reason:
                 # Ping http://10.0.0.148/release
-                requests.post("http://10.0.0.148/release")
-                break
+                requests.get("http://10.0.0.148/release")
+                #fucking crash the whole thing just break
+                break 
+            
             else:
                 if simon:
                     game_state.apply(cmd.apply(game_state.state))
