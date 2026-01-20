@@ -12,6 +12,13 @@ import mediapipe as mp
 
 from audioManager import play_prompt_audio
 
+from loadHelpers import (
+    load_json,
+    sanitize_constraints
+)
+
+from mjpegDecoder import mjpeg_frames_from_pipe
+
 # ============================================================
 # SIMON SAYS (Pose Edition)
 # - Uses your pose JSONs (poses/) + compounds (compounds/)
@@ -109,65 +116,10 @@ def thr_for_idx(idx: int) -> float:
     return 0.30
 
 # ============================================================
-# MJPEG PIPE DECODER
-# ============================================================
-def mjpeg_frames_from_pipe(pipe):
-    buf = bytearray()
-    while True:
-        chunk = pipe.read(4096)
-        if not chunk:
-            break
-        buf.extend(chunk)
-
-        while True:
-            start = buf.find(b"\xff\xd8")
-            if start == -1:
-                if len(buf) > 1_000_000:
-                    del buf[:-100_000]
-                break
-            end = buf.find(b"\xff\xd9", start + 2)
-            if end == -1:
-                if start > 0:
-                    del buf[:start]
-                break
-
-            jpg = bytes(buf[start:end + 2])
-            del buf[:end + 2]
-            yield jpg
-
-# ============================================================
 # LOADING POSES + COMPOUNDS
 # ============================================================
 POSES_BY_GROUP = {"arms": [], "legs": [], "torso": []}
 COMPOUNDS = {}
-
-def load_json(p: Path):
-    with open(p, "r") as f:
-        return json.load(f)
-
-def sanitize_constraints(pose_def):
-    cons = pose_def.get("constraints", {}) or {}
-    feats = pose_def.get("features", {}) or {}
-    safe = {}
-
-    for k, rule in cons.items():
-        if k not in feats:
-            continue
-        mean = feats[k].get("mean", None)
-        tol  = feats[k].get("tol",  None)
-        if mean is None or tol is None:
-            continue
-
-        rr = dict(rule)
-        if "min" in rr and rr["min"] > (mean + tol * 2.5):
-            rr.pop("min", None)
-        if "max" in rr and rr["max"] < (mean - tol * 2.5):
-            rr.pop("max", None)
-
-        if rr:
-            safe[k] = rr
-
-    pose_def["_constraints_sanitized"] = safe
 
 def load_assets():
     if POSE_DIR.exists():
@@ -461,7 +413,7 @@ class PoseDetector:
 # ============================================================
 def build_prompt_pool():
     """
-    We’ll build prompts from:
+    We'll build prompts from:
       - atomic presets: any single group pose (arms_* / legs_* / torso_*)
       - compound presets: each compound by name
     """
@@ -575,7 +527,7 @@ def main():
     time_limit = TIME_LIMIT_SEC
     hold_sec   = HOLD_SEC
 
-    time.sleep(2.0)  # let camera settle
+    time.sleep(1.0)  # let camera settle
     try:
         while True:
             # pick target
