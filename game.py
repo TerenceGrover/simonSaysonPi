@@ -769,42 +769,43 @@ def main():
 
                 obs = obs_from_detected(detected_groups)
 
-                for g in ("arms", "legs", "torso"):
-                    cur = current_locked[g]
-                    seen = obs[g]
+                # ========= HARD LOCK STATE VALIDATION =========
 
-                    # If this group is NOT affected by the command,
-                    # it must remain EXACTLY the same.
+                for g in ("arms", "legs", "torso"):
+                    cur = current_locked[g]      # Simon-locked state
+                    seen = obs[g]                # what the player is doing
+                    target = next_state[g]       # state AFTER command (if Simon)
+
                     if g not in cmd.affected_groups:
+                        # This group is NOT being commanded
                         if seen != cur:
                             fail_reason = "YOU MOVED WITHOUT PERMISSION."
                             break
 
-                    # If this group IS affected by the command:
                     else:
-                        target = next_state[g]
+                        # This group IS being commanded
+                        if not simon:
+                            # Trap: group must not change at all
+                            if seen != cur:
+                                fail_reason = "YOU OBEYED A LIE."
+                                break
 
-                        # Case 1 — group is locked in a pose:
-                        if cur != "UNKNOWN":
-                            # Only legal transition is: pose → UNKNOWN
-                            if target == "UNKNOWN":
-                                if seen != "UNKNOWN":
-                                    fail_reason = "YOU FAILED TO RELEASE."
+                        else:
+                            # Simon Says — HARD LOCK LOGIC
+                            if cur == "UNKNOWN":
+                                # Only legal move: UNKNOWN → target
+                                if seen not in ("UNKNOWN", target):
+                                    fail_reason = "ILLEGAL TRANSITION."
                                     break
                             else:
-                                # pose → pose is NEVER allowed
-                                fail_reason = "ILLEGAL TRANSITION."
-                                break
+                                # Only legal move: cur → UNKNOWN (release)
+                                if target != "UNKNOWN":
+                                    fail_reason = "ILLEGAL TRANSITION."
+                                    break
+                                if seen not in (cur, "UNKNOWN"):
+                                    fail_reason = "ILLEGAL TRANSITION."
+                                    break
 
-                        # Case 2 — group is neutral:
-                        else:
-                            # Only legal transition is: UNKNOWN → target
-                            if seen not in ("UNKNOWN", target):
-                                fail_reason = "YOU MOVED WITHOUT PERMISSION."
-                                break
-
-                if fail_reason:
-                    break
 
 
                 # Trap round: even affected group must NOT become the commanded next_state
