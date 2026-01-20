@@ -14,6 +14,7 @@ from audioManager import play_prompt_audio
 from loadHelpers import (load_json, sanitize_constraints)
 from mjpegDecoder import mjpeg_frames_from_pipe
 from passContraints import passes_constraints
+from hudDraw import draw_hud
 
 # ============================================================
 # SIMON SAYS (Pose Edition)
@@ -418,30 +419,6 @@ def current_matches_target(detected_groups, detected_compound, target_kind, targ
     group = target_name.split("_", 1)[0]
     return detected_groups.get(group) == target_name
 
-# ============================================================
-# UI DRAW
-# ============================================================
-def draw_hud(frame, score, streak, detected_groups, detected_compound, msg_top, msg_mid, msg_bot, color=(255,255,255)):
-    h, w = frame.shape[:2]
-    cv2.rectangle(frame, (0,0), (w, 90), (0,0,0), -1)
-    cv2.putText(frame, f"SCORE: {score}   STREAK: {streak}", (20, 55),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.4, (255,255,255), 3)
-
-    # detected status bar
-    y = h - 90
-    cv2.rectangle(frame, (0,y), (w, h), (0,0,0), -1)
-
-    dg = " | ".join([f"{k}:{detected_groups.get(k,'?').replace('_',' ')}" for k in ["arms","legs","torso"]])
-    cv2.putText(frame, dg[:120], (20, y+35), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
-
-    comp = detected_compound if detected_compound else "None"
-    cv2.putText(frame, f"compound: {comp}", (20, y+70), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
-
-    # big messages
-    cv2.putText(frame, msg_top, (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.4, color, 4)
-    cv2.putText(frame, msg_mid, (20, 215), cv2.FONT_HERSHEY_SIMPLEX, 1.1, color, 3)
-    cv2.putText(frame, msg_bot, (20, 270), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
-
 def read_frame(jpeg_stream, max_skip=5):
     frame = None
     for _ in range(max_skip):
@@ -455,6 +432,193 @@ def read_frame(jpeg_stream, max_skip=5):
     if frame is None:
         return None
     return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+# ============================================================
+# STATEFUL SIMON SAYS MECHANIC (lock state until released)
+# ============================================================
+
+ARMS_NEUTRAL = "UNKNOWN"     # we accept UNKNOWN as "hands down"
+LEGS_NEUTRAL = "UNKNOWN"     # standing
+TORSO_NEUTRAL = "UNKNOWN"
+
+# Map detected pose_name -> abstract substate (only where we need it)
+# NOTE: You can extend these if you have more atomic unilateral arm poses later.
+def obs_from_detected(detected_groups):
+    """
+    Convert detected_groups (pose names or UNKNOWN) into a simplified observation.
+    We keep it mostly as pose_name per group, because your classifier already
+    outputs pose_name strings.
+    """
+    return {
+        "arms": detected_groups.get("arms", "UNKNOWN"),
+        "legs": detected_groups.get("legs", "UNKNOWN"),
+        "torso": detected_groups.get("torso", "UNKNOWN"),
+    }
+
+def poses_match(expected_pose_name, observed_pose_name, group):
+    """
+    Matching rule with your "hands down == UNKNOWN" hack.
+    """
+    if group == "arms":
+        # arms_hands_down is unreliable -> treat UNKNOWN as "down"
+        if expected_pose_name in ("arms_hands_down", "UNKNOWN"):
+            return observed_pose_name == "UNKNOWN"
+    if group == "legs":
+        if expected_pose_name in ("legs_stand", "UNKNOWN"):
+            return observed_pose_name == "UNKNOWN"
+    # Default: strict match
+    return observed_pose_name == expected_pose_name
+
+def obs_matches_state(obs, state, groups=("arms","legs","torso")):
+    for g in groups:
+        if not poses_match(state[g], obs[g], g):
+            return False
+    return True
+
+class GameState:
+    """
+    The current "locked" expected posture. This is what the player MUST maintain
+    unless Simon Says updates it.
+    """
+    def __init__(self):
+        self.state = {"arms": "UNKNOWN", "legs": "UNKNOWN", "torso": "UNKNOWN"}
+
+    def copy(self):
+        s = GameState()
+        s.state = dict(self.state)
+        return s
+
+    def apply(self, next_state_dict):
+        self.state.update(next_state_dict)
+
+# --------- command definitions ----------
+class Command:
+    def __init__(self, name, affected_groups, apply_fn, valid_fn, weight_fn):
+        self.name = name  # used for audio folder lookup
+        self.affected_groups = set(affected_groups)
+        self.apply_fn = apply_fn      # (state_dict)-> new_state_dict
+        self.valid_fn = valid_fn      # (state_dict)-> bool
+        self.weight_fn = weight_fn    # (state_dict)-> float
+
+    def is_valid(self, st): return self.valid_fn(st)
+    def weight(self, st):  return float(self.weight_fn(st))
+    def apply(self, st):   return self.apply_fn(st)
+
+def clamp_w(w): 
+    return max(0.0, float(w))
+
+# Higher probability for "return to neutral" (and trap counterpart)
+RETURN_BOOST = 4.0
+
+def build_commands():
+    """
+    Commands operate on pose-level, not sub-limb level, because your detector outputs
+    group-level pose strings.
+    If later you add unilateral arm poses, you can extend this list.
+    """
+    cmds = []
+
+    # ---- ARMS ----
+    # "Hands up" sets arms_hands_up
+    cmds.append(Command(
+        name="arms_hands_up",
+        affected_groups=("arms",),
+        apply_fn=lambda st: {"arms": "arms_hands_up"},
+        valid_fn=lambda st: st["arms"] != "arms_hands_up",
+        weight_fn=lambda st: 1.0
+    ))
+
+    # Release arms back to neutral (UNKNOWN)
+    cmds.append(Command(
+        name="arms_hands_down",  # audio folder can still be arms_hands_down
+        affected_groups=("arms",),
+        apply_fn=lambda st: {"arms": "UNKNOWN"},
+        valid_fn=lambda st: st["arms"] != "UNKNOWN",
+        weight_fn=lambda st: RETURN_BOOST if st["arms"] != "UNKNOWN" else 0.0
+    ))
+
+    # Example other arms poses if you have them:
+    for pname in ["arms_t_pose", "arms_cross_arms", "arms_touch_nose", "arms_hand_on_head"]:
+        cmds.append(Command(
+            name=pname,
+            affected_groups=("arms",),
+            apply_fn=lambda st, pn=pname: {"arms": pn},
+            valid_fn=lambda st, pn=pname: st["arms"] != pn and st["arms"] != "UNKNOWN",
+            # NOTE: If you want these available from neutral too, remove st["arms"] != "UNKNOWN"
+            weight_fn=lambda st: 0.6
+        ))
+        # release from those poses (go neutral)
+        cmds.append(Command(
+            name="arms_hands_down",
+            affected_groups=("arms",),
+            apply_fn=lambda st: {"arms": "UNKNOWN"},
+            valid_fn=lambda st: st["arms"] == pname,
+            weight_fn=lambda st: RETURN_BOOST
+        ))
+
+    # ---- LEGS ----
+    # Set leg poses
+    for leg_pose in ["legs_single_leg_up_L", "legs_single_leg_up_R", "legs_split", "legs_squat"]:
+        cmds.append(Command(
+            name=leg_pose,
+            affected_groups=("legs",),
+            apply_fn=lambda st, lp=leg_pose: {"legs": lp},
+            valid_fn=lambda st, lp=leg_pose: (st["legs"] == "UNKNOWN") and (st["legs"] != lp),
+            weight_fn=lambda st: 1.0
+        ))
+
+    # Stand / neutral
+    cmds.append(Command(
+        name="legs_stand",
+        affected_groups=("legs",),
+        apply_fn=lambda st: {"legs": "UNKNOWN"},
+        valid_fn=lambda st: st["legs"] != "UNKNOWN",
+        weight_fn=lambda st: RETURN_BOOST if st["legs"] != "UNKNOWN" else 0.0
+    ))
+
+    # ---- TORSO ---- (optional)
+    # If torso poses exist, add them similarly.
+
+    return cmds
+
+COMMANDS = build_commands()
+
+def weighted_choice(items, weights):
+    total = sum(weights)
+    if total <= 0:
+        return None
+    r = random.random() * total
+    acc = 0.0
+    for it, w in zip(items, weights):
+        acc += w
+        if r <= acc:
+            return it
+    return items[-1]
+
+def pick_next_command(current_state):
+    """
+    Build a valid pool depending on current locked state.
+    Impossible combos -> valid_fn returns False or weight 0.
+    Return-to-neutral gets higher weight.
+    """
+    valid = []
+    weights = []
+    st = current_state
+
+    for c in COMMANDS:
+        if not c.is_valid(st):
+            continue
+        w = clamp_w(c.weight(st))
+        if w <= 0:
+            continue
+        valid.append(c)
+        weights.append(w)
+
+    # Fallback: if nothing is valid, allow a random "hands_up" or do nothing
+    if not valid:
+        return random.choice([c for c in COMMANDS if c.name in ("arms_hands_up", "legs_squat", "legs_split")])
+
+    return weighted_choice(valid, weights)
 
 # ============================================================
 # MAIN
@@ -503,9 +667,24 @@ def main():
     try:
         while True:
             # pick target
-            target_kind, target_name = random.choice(pool)
+            # --- stateful selection ---
+            if "game_state" not in locals():
+                game_state = GameState()  # locked expected posture
 
+            current_locked = dict(game_state.state)
+
+            cmd = pick_next_command(current_locked)
+            target_name = cmd.name
+            target_kind = "atomic"  # treat commands as atomic actions
+
+            # Simon says vs trap (trap must be common too)
             simon = (random.random() < SIMON_SAYS_PROB)
+
+            # If simon: expected state will change to the command-applied state
+            # If trap: expected state stays the same
+            next_state = dict(current_locked)
+            next_state.update(cmd.apply(current_locked))
+
             play_prompt_audio(target_name, simon)
             prompt_text = ("SIMON SAYS: " if simon else "DO: ")
             label = pretty_label(target_kind, target_name)
@@ -575,7 +754,35 @@ def main():
                 dt = now - last_t
                 last_t = now
 
-                is_match = current_matches_target(detected_groups, detected_comp, target_kind, target_name)
+                obs = obs_from_detected(detected_groups)
+
+                # Groups not affected by this command must stay locked AT ALL TIMES
+                locked_groups = {"arms","legs","torso"} - cmd.affected_groups
+
+                if not obs_matches_state(obs, current_locked, groups=locked_groups):
+                    fail_reason = "YOU MOVED WITHOUT PERMISSION."
+                    break
+
+                # Trap round: even affected group must NOT become the commanded next_state
+                if not simon:
+                    if obs_matches_state(obs, next_state, groups=cmd.affected_groups):
+                        fail_reason = "YOU OBEYED A LIE."
+                        break
+                    # In trap, also require affected group to remain locked
+                    if not obs_matches_state(obs, current_locked, groups=cmd.affected_groups):
+                        fail_reason = "YOU MOVED WITHOUT PERMISSION."
+                        break
+                else:
+                    # Simon round: success when affected group reaches next_state and holds
+                    if obs_matches_state(obs, next_state, groups=cmd.affected_groups):
+                        held_for += dt
+                    else:
+                        held_for = max(0.0, held_for - dt*0.8)
+
+                    if held_for >= hold_sec:
+                        success = True
+                        break
+
 
                 if simon:
                     if is_match:
@@ -648,6 +855,8 @@ def main():
                 time_limit = min(TIME_LIMIT_SEC, time_limit / SPEEDUP_FACTOR)
                 hold_sec   = min(HOLD_SEC, hold_sec / SPEEDUP_FACTOR)
             else:
+                if simon:
+                    game_state.apply(cmd.apply(game_state.state))
                 score += 1
                 streak += 1
 
