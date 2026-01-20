@@ -6,10 +6,11 @@ import random
 import subprocess
 from pathlib import Path
 from collections import defaultdict, deque
-
 import cv2
 import numpy as np
 import mediapipe as mp
+
+from audioManager import play_prompt_audio
 
 # ============================================================
 # SIMON SAYS (Pose Edition)
@@ -95,29 +96,6 @@ LM = {
     "L_ANK": 27,
     "R_ANK": 28,
 }
-
-def play_wav(path):
-    if not path or not os.path.exists(path):
-        return
-    subprocess.run(
-        ["aplay", str(path)],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-
-def play_prompt_audio(target_name, simon):
-
-    cmd_dir = COMMANDS_DIR / target_name
-    if not cmd_dir.exists():
-        print(f"[WARN] Missing command audio for {target_name}")
-        return
-
-    # Simon says (random variant)
-    if simon:
-        play_random_wav_from_folder(SIMON_DIR)
-        play_random_wav_from_folder(cmd_dir)
-    else:
-        play_random_wav_from_folder(cmd_dir)
 
 def thr_for_idx(idx: int) -> float:
     if idx in (LM["L_SHO"], LM["R_SHO"], LM["L_HIP"], LM["R_HIP"], LM["L_KNE"], LM["R_KNE"]):
@@ -553,19 +531,6 @@ def read_frame(jpeg_stream, max_skip=5):
     if frame is None:
         return None
     return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-def play_random_wav_from_folder(folder: Path):
-    if not folder.exists() or not folder.is_dir():
-        print(f"[WARN] Missing audio folder: {folder}")
-        return
-
-    files = sorted(folder.glob("*.wav"))
-    if not files:
-        print(f"[WARN] No wav files in: {folder}")
-        return
-
-    wav = random.choice(files)
-    play_wav(str(wav))
 
 # ============================================================
 # MAIN
