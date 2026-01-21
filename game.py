@@ -27,7 +27,7 @@ from hudDraw import draw_hud
 # --------------------
 # DISPLAY / CAMERA
 # --------------------
-os.environ.setdefault("DISPLAY", ":0")
+# os.environ.setdefault("DISPLAY", ":0")
 
 W, H = 1280, 720
 FPS = 7
