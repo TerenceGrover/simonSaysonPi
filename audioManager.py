@@ -6,15 +6,25 @@ import os
 AUDIO_ROOT = Path("audio")
 SIMON_DIR = AUDIO_ROOT / "simon_says"
 COMMANDS_DIR = AUDIO_ROOT / "commands"
+SILENCE_WAV = AUDIO_ROOT / "silence_200ms.wav"
 
 def play_wav(path):
     if not path or not os.path.exists(path):
         return
+
+    # Wake Bluetooth first
+    subprocess.run(
+        ["aplay", str(SILENCE_WAV)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
     subprocess.run(
         ["aplay", str(path)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
+
 
 def play_prompt_audio(target_name, simon):
 
