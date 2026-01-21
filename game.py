@@ -30,7 +30,7 @@ from hudDraw import draw_hud
 os.environ.setdefault("DISPLAY", ":0")
 
 W, H = 1280, 720
-FPS = 10
+FPS = 8
 FRAME_TIME = 1.0 / FPS
 WINDOW_NAME = "SIMON SAYS (POSE)"
 ROTATE = cv2.ROTATE_90_COUNTERCLOCKWISE  # or CLOCKWISE if wrong direction
