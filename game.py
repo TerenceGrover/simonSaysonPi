@@ -54,7 +54,7 @@ RPICAM_CMD = [
 # GAME TUNING
 # --------------------
 SIMON_SAYS_PROB = 0.72     # probability the prompt is a real "Simon says"
-PROMPT_SEC      = 0.1      # show prompt before evaluation starts
+PROMPT_SEC      = 0.33      # show prompt before evaluation starts
 TIME_LIMIT_SEC  = 2.0      # time allowed to achieve the pose
 HOLD_SEC        = 0.3      # must hold correct pose this long (stable frames)
 COOLDOWN_SEC    = 0.3      # pause between rounds
@@ -64,11 +64,11 @@ SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
 # --------------------
 # POSE VALIDATOR TUNING (your defaults)
 # --------------------
-MAX_ACCEPTABLE_SCORE = {"arms": 4, "legs": 4, "torso": 4}
+MAX_ACCEPTABLE_SCORE = {"arms": 5, "legs": 5, "torso": 5}
 MARGIN_MIN          = {"arms": 0.45, "legs": 0.55, "torso": 0.60}
 
-SMOOTH_WIN  = 1
-SMOOTH_NEED = 1
+SMOOTH_WIN  = 4
+SMOOTH_NEED = 2
 
 VIS_CORE  = 0.50
 VIS_WRIST = 0.1
