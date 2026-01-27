@@ -55,9 +55,9 @@ RPICAM_CMD = [
 # --------------------
 SIMON_SAYS_PROB = 0.72     # probability the prompt is a real "Simon says"
 PROMPT_SEC      = 1.0      # show prompt before evaluation starts
-TIME_LIMIT_SEC  = 5.0      # time allowed to achieve the pose
-HOLD_SEC        = 0.3      # must hold correct pose this long (stable frames)
-COOLDOWN_SEC    = 0.3      # pause between rounds
+TIME_LIMIT_SEC  = 3.0      # time allowed to achieve the pose
+HOLD_SEC        = 0.5      # must hold correct pose this long (stable frames)
+COOLDOWN_SEC    = 0.5      # pause between rounds
 SPEEDUP_EVERY   = 2       # every N successes, tighten timing
 SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
 
@@ -914,7 +914,7 @@ def main():
                 # speed up
                 if streak % SPEEDUP_EVERY == 0:
                     time_limit = max(1.3, time_limit * SPEEDUP_FACTOR)
-                    hold_sec   = max(0.45, hold_sec * SPEEDUP_FACTOR)
+                    hold_sec   = max(0.45, hold_sec * (SPEEDUP_FACTOR / 2))
 
                 # show success flash
                 t_end = time.time() + 0.7
