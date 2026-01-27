@@ -30,7 +30,7 @@ from hudDraw import draw_hud
 os.environ.setdefault("DISPLAY", ":0")
 
 W, H = 1280, 720
-FPS = 8
+FPS = 10
 FRAME_TIME = 1.0 / FPS
 WINDOW_NAME = "SIMON SAYS (POSE)"
 ROTATE = cv2.ROTATE_90_COUNTERCLOCKWISE  # or CLOCKWISE if wrong direction
@@ -54,8 +54,8 @@ RPICAM_CMD = [
 # GAME TUNING
 # --------------------
 SIMON_SAYS_PROB = 0.72     # probability the prompt is a real "Simon says"
-PROMPT_SEC      = 0.33      # show prompt before evaluation starts
-TIME_LIMIT_SEC  = 2.0      # time allowed to achieve the pose
+PROMPT_SEC      = 1.0      # show prompt before evaluation starts
+TIME_LIMIT_SEC  = 5.0      # time allowed to achieve the pose
 HOLD_SEC        = 0.3      # must hold correct pose this long (stable frames)
 COOLDOWN_SEC    = 0.3      # pause between rounds
 SPEEDUP_EVERY   = 2       # every N successes, tighten timing
@@ -691,8 +691,8 @@ def main():
 
     pose = mp_pose.Pose(
         static_image_mode=False,
-        model_complexity=1,
-        smooth_landmarks=True,
+        model_complexity=0,
+        smooth_landmarks=False,
         enable_segmentation=False,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
