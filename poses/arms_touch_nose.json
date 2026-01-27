@@ -8,22 +8,29 @@
     "ang_elb_L",
     "ang_elb_R"
   ],
-  "constraints": {},
-  "features": {
+  "constraints": {
     "d_wri_nose_L": {
-      "mean": 0.7637600302696228,
-      "tol": 0.12
+      "max": 1.0
     },
     "d_wri_nose_R": {
-      "mean": 0.7835220694541931,
-      "tol": 0.3369911627054214
+      "max": 1.0
+    }
+  },
+  "features": {
+    "d_wri_nose_L": {
+      "mean": 0.75,
+      "tol": 0.25
+    },
+    "d_wri_nose_R": {
+      "mean": 0.75,
+      "tol": 0.25
     },
     "ang_elb_L": {
-      "mean": 4.0368170738220215,
-      "tol": 7.094264810371398
+      "mean": 6.0,
+      "tol": 6.0
     },
     "ang_elb_R": {
-      "mean": 3.976534128189087,
+      "mean": 6.0,
       "tol": 6.0
     }
   },
