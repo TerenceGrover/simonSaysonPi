@@ -901,7 +901,7 @@ def main():
             # scoring
             if fail_reason:
                 # Ping http://10.0.0.148/release
-                requests.get("http://10.0.0.148/release")
+                requests.get("http://10.0.0.139/release")
                 #fucking crash the whole thing just break
                 break 
 
