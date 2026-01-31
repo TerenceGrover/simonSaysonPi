@@ -53,8 +53,8 @@ RPICAM_CMD = [
 # --------------------
 # GAME TUNING
 # --------------------
-SIMON_SAYS_PROB = 0.72     # probability the prompt is a real "Simon says"
-PROMPT_SEC      = 0.1      # show prompt before evaluation starts
+SIMON_SAYS_PROB = 0.8     # probability the prompt is a real "Simon says"
+PROMPT_SEC      = 0.0      # show prompt before evaluation starts
 TIME_LIMIT_SEC  = 1.5      # time allowed to achieve the pose
 HOLD_SEC        = 0.3      # must hold correct pose this long (stable frames)
 COOLDOWN_SEC    = 0.2      # pause between rounds
@@ -573,7 +573,7 @@ def build_commands():
         ))
 
     # ---------- LEGS ----------
-    for lp in ["legs_split", "legs_squat", "legs_single_leg_up_L", "legs_single_leg_up_R"]:
+    for lp in ["legs_squat", "legs_single_leg_up_L", "legs_single_leg_up_R"]:
         cmds.append(Command(
             name=lp,
             affected_groups=("legs",),
