@@ -3,13 +3,6 @@ import subprocess
 import random
 import os
 
-APLAY = subprocess.Popen(
-    ["aplay", "-q"],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.DEVNULL,
-    stderr=subprocess.DEVNULL
-)
-
 AUDIO_ROOT = Path("audio")
 SIMON_DIR = AUDIO_ROOT / "simon_says"
 COMMANDS_DIR = AUDIO_ROOT / "commands"
@@ -19,9 +12,18 @@ def play_wav(path):
     if not path or not os.path.exists(path):
         return
 
-    with open(path, "rb") as f:
-        APLAY.stdin.write(f.read())
-        APLAY.stdin.flush()
+    subprocess.run(
+        ["aplay", "-q", str(SILENCE_WAV)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
+    subprocess.run(
+        ["aplay", "-q", str(path)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
 
 
 def play_prompt_audio(target_name, simon):
