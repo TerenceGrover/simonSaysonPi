@@ -564,7 +564,7 @@ def build_commands():
 
 
     # (Optional) other arm poses: only reachable from neutral, released back to neutral
-    for pn in ["arms_t_pose", "arms_cross_arms", "arms_touch_nose", "arms_hand_on_head", "arms_grab_crotch"]:
+    for pn in ["arms_t_pose", "arms_cross_arms", "arms_touch_nose", "arms_hand_on_head"]:
         cmds.append(Command(
             name=pn,
             affected_groups=("arms",),
