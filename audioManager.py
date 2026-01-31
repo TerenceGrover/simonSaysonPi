@@ -3,6 +3,13 @@ import subprocess
 import random
 import os
 
+APLAY = subprocess.Popen(
+    ["aplay", "-q"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.DEVNULL
+)
+
 AUDIO_ROOT = Path("audio")
 SIMON_DIR = AUDIO_ROOT / "simon_says"
 COMMANDS_DIR = AUDIO_ROOT / "commands"
@@ -12,18 +19,9 @@ def play_wav(path):
     if not path or not os.path.exists(path):
         return
 
-    # Wake Bluetooth first
-    subprocess.run(
-        ["aplay", str(SILENCE_WAV)],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-
-    subprocess.run(
-        ["aplay", str(path)],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
+    with open(path, "rb") as f:
+        APLAY.stdin.write(f.read())
+        APLAY.stdin.flush()
 
 
 def play_prompt_audio(target_name, simon):
