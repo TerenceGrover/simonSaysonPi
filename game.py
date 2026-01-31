@@ -59,7 +59,7 @@ TIME_LIMIT_SEC  = 3.0      # time allowed to achieve the pose
 HOLD_SEC        = 0.5      # must hold correct pose this long (stable frames)
 COOLDOWN_SEC    = 0.5      # pause between rounds
 SPEEDUP_EVERY   = 2       # every N successes, tighten timing
-SPEEDUP_FACTOR  = 0.90     # multiply TIME_LIMIT/HOLD by this (gentle)
+SPEEDUP_FACTOR  = 0.80     # multiply TIME_LIMIT/HOLD by this (gentle)
 
 # --------------------
 # POSE VALIDATOR TUNING (your defaults)
